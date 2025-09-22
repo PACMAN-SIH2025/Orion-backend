@@ -45,7 +45,7 @@ Orion Backend
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/PACMAN-SIH2025/Orion-backend.git
 cd Orion-backend
 ```
 
