@@ -5,7 +5,7 @@ Pydantic/Database models for users and authentication.
 
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, HttpUrl
 
 
 class TokenData(BaseModel):
@@ -103,3 +103,72 @@ class LoginHistory(BaseModel):
     user_agent: Optional[str] = None
     success: bool = True
     failure_reason: Optional[str] = None
+
+
+class UserKnowledgeSource(BaseModel):
+    """User-specific knowledge source model."""
+    id: str
+    user_id: str
+    website_name: str = Field(..., description="Website name for organization")
+    source_type: str = Field(..., pattern=r"^(url|pdf|document)$")
+    source_url: Optional[HttpUrl] = None
+    source_name: str = Field(..., description="Display name for the source")
+    description: Optional[str] = None
+    collection_name: str = Field(..., description="ChromaDB collection name")
+    status: str = Field(default="pending", pattern=r"^(pending|processing|completed|failed)$")
+    progress: float = Field(default=0.0, ge=0.0, le=100.0)
+    chunks_processed: int = Field(default=0)
+    total_chunks: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    completed_at: Optional[datetime] = None
+    last_accessed: Optional[datetime] = None
+    access_count: int = Field(default=0)
+    tags: List[str] = Field(default_factory=list)
+    metadata: dict = Field(default_factory=dict)
+    error_message: Optional[str] = None
+
+
+class UserKnowledgeSourceCreate(BaseModel):
+    """Create user knowledge source model."""
+    website_name: str = Field(..., description="Website name for organization")
+    source_type: str = Field(..., pattern=r"^(url|pdf|document)$")
+    source_url: Optional[HttpUrl] = None
+    source_name: str = Field(..., description="Display name for the source")
+    description: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
+    max_depth: Optional[int] = Field(default=3, ge=1, le=5)
+    chunk_size: Optional[int] = Field(default=1000, ge=100, le=5000)
+
+
+class UserKnowledgeSourceUpdate(BaseModel):
+    """Update user knowledge source model."""
+    source_name: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
+class Website(BaseModel):
+    """Website organization model."""
+    name: str = Field(..., description="Website name")
+    user_id: str
+    base_url: Optional[HttpUrl] = None
+    description: Optional[str] = None
+    source_count: int = Field(default=0)
+    created_at: datetime
+    updated_at: datetime
+    last_accessed: Optional[datetime] = None
+
+
+class UserLoginRequest(BaseModel):
+    """User login request model."""
+    username: str = Field(..., min_length=3, max_length=50)
+    password: str = Field(..., min_length=6)
+
+
+class UserLoginResponse(BaseModel):
+    """User login response model."""
+    access_token: str
+    token_type: str = "bearer"
+    expires_in: int
+    user_info: dict

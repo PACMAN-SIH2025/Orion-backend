@@ -15,6 +15,7 @@ from models.chat_models import (
 from services.rag_service import RAGService
 
 router = APIRouter()
+rag_service = RAGService()
 
 
 @router.post("/query", response_model=ChatResponse)
@@ -24,11 +25,8 @@ async def chat_query(chat_data: ChatRequest):
     Processes natural language questions and returns AI-generated responses.
     """
     try:
-        # TODO: Implement RAG pipeline integration
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Chat functionality not implemented yet"
-        )
+        response = await rag_service.process_query(chat_data)
+        return response
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

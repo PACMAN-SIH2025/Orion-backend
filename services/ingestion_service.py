@@ -4,16 +4,13 @@ Logic for web scraping, PDF parsing, and document chunking.
 """
 
 import asyncio
-import aiohttp
 import hashlib
 import logging
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
-from urllib.parse import urlparse
 
 import pypdf
-from bs4 import BeautifulSoup
 from docx import Document
 import chardet
 
@@ -44,55 +41,17 @@ class IngestionService:
             Dictionary containing processed chunks and metadata
         """
         try:
-            if request.source_type == "url":
-                return await self._process_url(request.source_data, request.metadata)
-            elif request.source_type == "file":
-                return await self._process_file(request.source_data, request.metadata)
+            # Remove URL scraping - only process files and text
+            metadata = request.metadata or {}
+            if request.source_type == "file":
+                return await self._process_file(request.source_data, metadata)
             elif request.source_type == "text":
-                return await self._process_text(request.source_data, request.metadata)
+                return await self._process_text(request.source_data, metadata)
             else:
-                raise ValueError(f"Unsupported source type: {request.source_type}")
+                raise ValueError(f"Unsupported source type: {request.source_type}. Only file and text ingestion supported.")
                 
         except Exception as e:
             logger.error(f"Error processing ingestion: {str(e)}")
-            raise
-
-    async def _process_url(self, url: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
-        """Process content from a URL."""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as response:
-                    if response.status != 200:
-                        raise Exception(f"Failed to fetch URL: HTTP {response.status}")
-                    
-                    content_type = response.headers.get('content-type', '').lower()
-                    content = await response.read()
-                    
-                    if 'text/html' in content_type:
-                        text_content = self._extract_html_content(content.decode('utf-8'))
-                    elif 'application/pdf' in content_type:
-                        text_content = self._extract_pdf_content(content)
-                    else:
-                        # Try to decode as text
-                        encoding = chardet.detect(content)['encoding'] or 'utf-8'
-                        text_content = content.decode(encoding)
-                    
-                    chunks = self._chunk_text(text_content)
-                    
-                    return {
-                        "source_url": url,
-                        "content_type": content_type,
-                        "total_chunks": len(chunks),
-                        "chunks": chunks,
-                        "metadata": {
-                            **metadata,
-                            "processed_at": datetime.utcnow().isoformat(),
-                            "original_length": len(text_content)
-                        }
-                    }
-                    
-        except Exception as e:
-            logger.error(f"Error processing URL {url}: {str(e)}")
             raise
 
     async def _process_file(self, file_path: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
@@ -161,30 +120,6 @@ class IngestionService:
             logger.error(f"Error processing text: {str(e)}")
             raise
 
-    def _extract_html_content(self, html: str) -> str:
-        """Extract text content from HTML."""
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        # Remove script and style elements
-        for script in soup(["script", "style"]):
-            script.decompose()
-        
-        # Get text content
-        text = soup.get_text()
-        
-        # Clean up whitespace
-        lines = (line.strip() for line in text.splitlines())
-        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
-        text = ' '.join(chunk for chunk in chunks if chunk)
-        
-        return text
-
-    def _extract_pdf_content(self, pdf_bytes: bytes) -> str:
-        """Extract text content from PDF bytes."""
-        # TODO: Implement PDF extraction from bytes
-        # This would typically use PyPDF2 or pdfplumber
-        raise NotImplementedError("PDF extraction from bytes not implemented yet")
-
     def _extract_pdf_from_file(self, file_path: str) -> str:
         """Extract text content from PDF file."""
         text = ""
@@ -249,10 +184,3 @@ class IngestionService:
         """Calculate hash for content deduplication."""
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def validate_url(self, url: str) -> bool:
-        """Validate if URL is properly formatted."""
-        try:
-            result = urlparse(url)
-            return all([result.scheme, result.netloc])
-        except Exception:
-            return False

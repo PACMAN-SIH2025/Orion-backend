@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
-from app.api.v1 import admin, chat
+from app.api.v1 import admin, chat, auth
 from core.config import get_settings
 
 settings = get_settings()
@@ -36,6 +36,7 @@ app.add_middleware(
 )
 
 # Include API routers
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 

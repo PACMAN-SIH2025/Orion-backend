@@ -38,7 +38,7 @@ Orion Backend
 - Python 3.8+
 - Redis (for Celery background tasks)
 - PostgreSQL (recommended for production)
-- OpenAI API key (for embeddings and chat completion)
+- Google Gemini API key (for embeddings and chat completion)
 
 ## 🛠️ Installation
 
@@ -63,9 +63,22 @@ source venv/bin/activate
 
 ### 3. Install Dependencies
 
+**For Production Setup:**
 ```bash
 pip install -r requirements.txt
 ```
+
+**For Development:**
+```bash
+pip install -r requirements-dev.txt
+```
+
+**For All Features (ML, Demos, etc.):**
+```bash
+pip install -r requirements-optional.txt
+```
+
+See [REQUIREMENTS_GUIDE.md](REQUIREMENTS_GUIDE.md) for detailed dependency information.
 
 ### 4. Environment Configuration
 
@@ -89,8 +102,8 @@ DATABASE_URL=postgresql://username:password@localhost:5432/orion_db
 # Redis
 REDIS_URL=redis://localhost:6379/0
 
-# OpenAI
-OPENAI_API_KEY=your-openai-api-key-here
+# Google Gemini
+GEMINI_API_KEY=your-gemini-api-key-here
 
 # JWT
 JWT_SECRET_KEY=your-jwt-secret-key-here
@@ -200,8 +213,11 @@ Orion-backend/
 │   ├── celery_app.py          # Celery configuration
 │   └── tasks.py               # Background tasks
 ├── .env                       # Environment variables
-├── requirements.txt           # Python dependencies
+├── requirements.txt           # Production dependencies
+├── requirements-dev.txt       # Development dependencies  
+├── requirements-optional.txt  # Optional features (ML, demos)
 ├── README.md                  # This file
+├── REQUIREMENTS_GUIDE.md      # Dependency management guide
 └── TESTING_GUIDE.md          # Testing instructions
 ```
 
@@ -248,7 +264,7 @@ Logs are configured using Python's logging module with:
 
 ### Docker Deployment
 
-```dockerfile
+``dockerfile
 # Dockerfile example
 FROM python:3.9-slim
 

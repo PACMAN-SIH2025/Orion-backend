@@ -5,7 +5,8 @@ Pydantic settings for environment variable management.
 
 from functools import lru_cache
 from typing import List
-from pydantic import BaseSettings, Field
+from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
@@ -16,14 +17,17 @@ class Settings(BaseSettings):
     app_name: str = Field(default="Orion Backend", env="APP_NAME")
     version: str = Field(default="1.0.0", env="VERSION")
     
-    # Security
+    # Security (only keep SECRET_KEY for general cryptographic operations)
     secret_key: str = Field(..., env="SECRET_KEY")
-    jwt_algorithm: str = Field(default="HS256", env="JWT_ALGORITHM")
-    access_token_expire_minutes: int = Field(default=30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    
+    # Supabase Configuration
+    supabase_url: str = Field(..., env="SUPABASE_URL")
+    supabase_anon_key: str = Field(..., env="SUPABASE_ANON_KEY")
+    supabase_service_role_key: str = Field(..., env="SUPABASE_SERVICE_ROLE_KEY")
     
     # CORS and Security
     allowed_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8080"],
+        default=["http://localhost:3000", "http://localhost:8080", "http://localhost:5173"],
         env="ALLOWED_ORIGINS"
     )
     allowed_hosts: List[str] = Field(
@@ -41,14 +45,19 @@ class Settings(BaseSettings):
     vector_db_url: str = Field(..., env="VECTOR_DB_URL")
     vector_db_api_key: str = Field(default="", env="VECTOR_DB_API_KEY")
     
+    # ChromaDB Configuration
+    chroma_db_dir: str = Field(default="./chroma_db", env="CHROMA_DB_DIR")
+    chroma_collection_name: str = Field(default="docs", env="CHROMA_COLLECTION_NAME")
+    chroma_embedding_model: str = Field(default="all-MiniLM-L6-v2", env="CHROMA_EMBEDDING_MODEL")
+    
     # AI/LLM Configuration
-    openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
+    gemini_api_key: str = Field(default="", env="GEMINI_API_KEY")
     anthropic_api_key: str = Field(default="", env="ANTHROPIC_API_KEY")
     huggingface_api_key: str = Field(default="", env="HUGGINGFACE_API_KEY")
     
     # RAG Configuration
-    embedding_model: str = Field(default="text-embedding-ada-002", env="EMBEDDING_MODEL")
-    llm_model: str = Field(default="gpt-3.5-turbo", env="LLM_MODEL")
+    embedding_model: str = Field(default="models/embedding-001", env="EMBEDDING_MODEL")
+    llm_model: str = Field(default="gemini-1.5-flash", env="LLM_MODEL")
     chunk_size: int = Field(default=1000, env="CHUNK_SIZE")
     chunk_overlap: int = Field(default=200, env="CHUNK_OVERLAP")
     max_tokens: int = Field(default=2000, env="MAX_TOKENS")

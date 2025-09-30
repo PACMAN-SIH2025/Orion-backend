@@ -23,9 +23,9 @@ class AdminLoginResponse(BaseModel):
 
 
 class IngestionRequest(BaseModel):
-    """Data ingestion request model."""
-    source_type: str = Field(..., regex="^(url|file|text)$")
-    source_data: str = Field(..., description="URL, file path, or raw text")
+    """Data ingestion request model (URL scraping removed - only file and text ingestion supported)."""
+    source_type: str = Field(..., pattern=r"^(file|text)$")
+    source_data: str = Field(..., description="File path or raw text")
     metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
     priority: int = Field(default=1, ge=1, le=10)
     tags: Optional[List[str]] = Field(default_factory=list)
@@ -94,3 +94,39 @@ class BulkIngestionResponse(BaseModel):
     task_ids: List[str]
     total_tasks: int
     message: str
+
+
+class Crawl4AIScrapeRequest(BaseModel):
+    """Crawl4AI web scraping request model."""
+    url: HttpUrl = Field(..., description="URL to scrape")
+    description: Optional[str] = Field(None, description="Optional description for the source")
+    collection_name: Optional[str] = Field(default="docs", description="ChromaDB collection name")
+    max_depth: Optional[int] = Field(default=3, ge=1, le=5, description="Maximum crawling depth")
+    chunk_size: Optional[int] = Field(default=1000, ge=100, le=5000, description="Maximum chunk size in characters")
+    max_concurrent: Optional[int] = Field(default=5, ge=1, le=10, description="Maximum concurrent connections")
+    
+
+class Crawl4AIScrapeResponse(BaseModel):
+    """Crawl4AI web scraping response model."""
+    task_id: str
+    status: str = "started"
+    message: str
+    url: str
+    collection_name: str
+    estimated_completion: Optional[datetime] = None
+
+
+class Crawl4AIStatusResponse(BaseModel):
+    """Crawl4AI scraping status response model."""
+    task_id: str
+    status: str  # pending, processing, completed, failed
+    progress: float = Field(ge=0.0, le=100.0)
+    url: str
+    collection_name: str
+    chunks_processed: Optional[int] = None
+    total_chunks: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+    completed_at: Optional[datetime] = None
+    result: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None

@@ -1,0 +1,24 @@
+# Orion Backend - Development Dependencies
+
+# Include production requirements
+-r requirements.txt
+
+# Testing and Quality Assurance
+pytest>=8.0.0
+pytest-asyncio>=0.21.1
+pytest-mock==3.14.0
+
+# Code Formatting and Linting
+black>=23.11.0
+flake8>=6.1.0
+mypy>=1.7.1
+
+# Monitoring and Error Tracking (Development)
+sentry-sdk[fastapi]==1.38.0
+
+# Type Checking
+types-requests==2.32.0.20250328
+
+# Development Utilities
+ipython>=8.0.0
+jupyter>=1.0.0
